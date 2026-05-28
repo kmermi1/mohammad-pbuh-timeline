@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sīrah · A Visual Chronicle of the Life of the Prophet Muhammad ﷺ</title>
+<meta name="description" content="An interactive timeline and relationship graph of the people, places and events around the Prophet Muhammad ﷺ." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- Background texture -->
+<div class="paper-grain" aria-hidden="true"></div>
+
+<!-- ─────────────── HEADER ─────────────── -->
+<header class="masthead">
+  <div class="mast-row">
+    <span class="mast-side">سيرة</span>
+    <span class="mast-center">Sīrah</span>
+    <span class="mast-side">Anno 632 — 1404 AH</span>
+  </div>
+  <h1 class="display-title">
+    The Life of the <em>Prophet</em>
+    <span class="title-line">Muhammad <span class="saw">ﷺ</span></span>
+  </h1>
+  <p class="lede">
+    A visual chronicle of the people, places, and pivotal moments that shaped
+    early Islam — from the Year of the Elephant to the Farewell Pilgrimage.
+  </p>
+  <div class="ornament" aria-hidden="true">
+    <svg viewBox="0 0 200 14" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 7 H80" stroke="currentColor" stroke-width="0.8" fill="none" />
+      <circle cx="92" cy="7" r="1.4" fill="currentColor" />
+      <path d="M100 1 L106 7 L100 13 L94 7 Z" fill="none" stroke="currentColor" stroke-width="0.8" />
+      <circle cx="108" cy="7" r="1.4" fill="currentColor" />
+      <path d="M120 7 H200" stroke="currentColor" stroke-width="0.8" fill="none" />
+    </svg>
+  </div>
+</header>
+
+<!-- ─────────────── RELATIONSHIP GRAPH ─────────────── -->
+<section class="graph-section" id="graph">
+  <div class="section-head">
+    <span class="section-num">I.</span>
+    <h2 class="section-title">The Web of Relations</h2>
+    <p class="section-sub">One hundred figures from the Prophet's ﷺ time — family, companions, opponents, and allies. Drag a node, hover for a name, click to read more.</p>
+  </div>
+
+  <!-- Controls -->
+  <div class="graph-controls">
+    <div class="search-wrap">
+      <input id="search" type="text" placeholder="Search by name…" autocomplete="off" />
+      <span class="search-icon">⌕</span>
+    </div>
+
+    <div class="legend">
+      <button class="legend-item" data-cat="family"        type="button"><span class="dot" data-cat="family"></span>Family</button>
+      <button class="legend-item" data-cat="wife"          type="button"><span class="dot" data-cat="wife"></span>Wives</button>
+      <button class="legend-item" data-cat="child"         type="button"><span class="dot" data-cat="child"></span>Children</button>
+      <button class="legend-item" data-cat="grandchild"    type="button"><span class="dot" data-cat="grandchild"></span>Grandchildren</button>
+      <button class="legend-item" data-cat="caliph"        type="button"><span class="dot" data-cat="caliph"></span>Caliphs</button>
+      <button class="legend-item" data-cat="companion"     type="button"><span class="dot" data-cat="companion"></span>Companions</button>
+      <button class="legend-item" data-cat="opponent"      type="button"><span class="dot" data-cat="opponent"></span>Opponents</button>
+      <button class="legend-item" data-cat="ally"          type="button"><span class="dot" data-cat="ally"></span>Allies</button>
+    </div>
+
+    <button id="reset-btn" class="reset-btn" type="button">↺ Reset view</button>
+  </div>
+
+  <div class="graph-stage">
+    <svg id="graph-svg" aria-label="Relationship graph"></svg>
+    <!-- Detail card -->
+    <aside id="detail-card" class="detail-card" aria-live="polite">
+      <button class="close-btn" id="close-detail" type="button" aria-label="Close">×</button>
+      <div class="detail-body">
+        <p class="detail-hint">Click a node to read about a figure.</p>
+      </div>
+    </aside>
+  </div>
+
+  <p class="graph-foot">Edges show family ties, marriage, companionship, alliance, or opposition. Position is automatic — drag to rearrange.</p>
+</section>
+
+<!-- ─────────────── DIVIDER ─────────────── -->
+<div class="divider" aria-hidden="true">
+  <svg viewBox="0 0 600 30" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 15 H260" stroke="currentColor" stroke-width="0.6"/>
+    <g transform="translate(300 15)">
+      <circle r="10" fill="none" stroke="currentColor" stroke-width="0.6"/>
+      <path d="M-6 0 L0 -6 L6 0 L0 6 Z" fill="none" stroke="currentColor" stroke-width="0.6"/>
+      <circle r="1.8" fill="currentColor"/>
+    </g>
+    <path d="M340 15 H600" stroke="currentColor" stroke-width="0.6"/>
+  </svg>
+</div>
+
+<!-- ─────────────── TIMELINE ─────────────── -->
+<section class="timeline-section" id="timeline">
+  <div class="section-head">
+    <span class="section-num">II.</span>
+    <h2 class="section-title">The Chronicle</h2>
+    <p class="section-sub">Twenty-nine moments, in the order they happened.</p>
+  </div>
+  <ol class="timeline" id="timeline-list"></ol>
+</section>
+
+<!-- ─────────────── FOOTER ─────────────── -->
+<footer class="footer">
+  <div class="footer-ornament" aria-hidden="true">۞</div>
+  <p>Made as an open educational project. Dates are approximate where sources disagree.</p>
+  <p class="small">May God's peace and blessings be upon him and his family.</p>
+</footer>
+
+<!-- Scripts -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
