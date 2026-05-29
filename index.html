@@ -1,3 +1,9 @@
+<!--
+  © 2026 All Rights Reserved.
+  This work — including its design, content, data, and source code — may not be
+  reproduced, distributed, modified, or transmitted in any form without prior
+  written permission from the author.
+-->
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,9 +15,20 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="styles.css" />
+<script>
+  // Set theme before paint to avoid flash
+  (function () {
+    try {
+      var t = localStorage.getItem("sirah-theme") || "parchment";
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      document.documentElement.setAttribute("data-theme", "parchment");
+    }
+  })();
+</script>
 </head>
 <body>
 
@@ -23,7 +40,22 @@
   <div class="mast-row">
     <span class="mast-side">سيرة</span>
     <span class="mast-center">Sīrah</span>
-    <span class="mast-side">Anno 632 — 1404 AH</span>
+    <div class="mast-side mast-right">
+      <span class="mast-date">Anno 632 — 1404 AH</span>
+      <div class="theme-switcher" id="theme-switcher">
+        <button class="theme-switcher-btn" id="theme-switcher-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Choose theme">
+          <span class="theme-switcher-current" id="theme-switcher-current">Parchment</span>
+          <span class="theme-switcher-chev" aria-hidden="true">▾</span>
+        </button>
+        <ul class="theme-switcher-menu" id="theme-switcher-menu" role="listbox" hidden>
+          <li role="option" data-select="parchment" tabindex="0">Parchment</li>
+          <li role="option" data-select="modern" tabindex="0">Modern</li>
+          <li role="option" data-select="newspaper" tabindex="0">Newspaper</li>
+          <li role="option" data-select="midnight" tabindex="0">Midnight</li>
+          <li role="option" data-select="gold" tabindex="0">Gold</li>
+        </ul>
+      </div>
+    </div>
   </div>
   <h1 class="display-title">
     The Life of the <em>Prophet</em>
@@ -113,7 +145,8 @@
 <!-- ─────────────── FOOTER ─────────────── -->
 <footer class="footer">
   <div class="footer-ornament" aria-hidden="true">۞</div>
-  <p>Made as an open educational project. Dates are approximate where sources disagree.</p>
+  <p class="small">Dates are approximate where sources disagree.</p>
+  <p class="copyright">© 2026 All Rights Reserved. This work may not be reproduced or distributed without prior written permission.</p>
   <p class="small">May God's peace and blessings be upon him and his family.</p>
 </footer>
 

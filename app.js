@@ -4,23 +4,14 @@
    - Searchable, filterable by category
    - Click a node → detail card with related figures
    - Renders chronological timeline
+
+   © 2026 All Rights Reserved.
+   This source code may not be reproduced or reused without
+   prior written permission from the author.
    ========================================================= */
 
 (function () {
   "use strict";
-
-  // ── Color lookup keyed by category ───────────────────────
-  const CAT_COLOR = {
-    prophet:    "#1c1611",
-    family:     "#7a1f25",
-    wife:       "#8f4a6b",
-    child:      "#a85a2a",
-    grandchild: "#b08538",
-    caliph:     "#1f3552",
-    companion:  "#4a5a2e",
-    opponent:   "#4a3325",
-    ally:       "#6b5a47"
-  };
 
   const CAT_LABEL = {
     prophet:    "Prophet",
@@ -82,7 +73,7 @@
   // ── SVG setup ────────────────────────────────────────────
   const svgEl = document.getElementById("graph-svg");
   const svg = d3.select(svgEl);
-  const { width, height } = svgEl.getBoundingClientRect();
+  let { width, height } = svgEl.getBoundingClientRect();
 
   // Group that pans/zooms
   const root = svg.append("g").attr("class", "root");
@@ -97,28 +88,71 @@
   const linkLayer = root.append("g").attr("class", "links");
   const nodeLayer = root.append("g").attr("class", "nodes");
 
-  // Force simulation
+  // Force simulation. All size-dependent parameters are scaled via configureForces().
+  function baseLinkDistance(type) {
+    if (type === "spouse" || type === "parent") return 55;
+    if (type === "close_companion") return 75;
+    if (type === "companion") return 95;
+    if (type === "opponent") return 130;
+    return 85;
+  }
+
+  // Elliptical placement force: pulls Muhammad to centre, pushes others toward
+  // an ellipse perimeter sized to the canvas. Lets wide screens spread nodes
+  // horizontally instead of clustering inside a fixed-radius circle.
+  function ellipseForce(cx, cy, rx, ry, strength) {
+    let simNodes;
+    function f(alpha) {
+      const k = alpha * strength;
+      for (const n of simNodes) {
+        if (n.id === "muhammad") {
+          n.vx += (cx - n.x) * k;
+          n.vy += (cy - n.y) * k;
+          continue;
+        }
+        const dx = n.x - cx;
+        const dy = n.y - cy;
+        if (dx === 0 && dy === 0) continue;
+        const angle = Math.atan2(dy, dx);
+        const tx = cx + rx * Math.cos(angle);
+        const ty = cy + ry * Math.sin(angle);
+        n.vx += (tx - n.x) * k;
+        n.vy += (ty - n.y) * k;
+      }
+    }
+    f.initialize = (_n) => { simNodes = _n; };
+    return f;
+  }
+
+  // Aggressive scale so the cluster actually grows with the canvas.
+  // Use the larger dimension so wide screens get longer links and a bigger ellipse.
+  function computeScale(w, h) {
+    return Math.max(w / 810, h / 640);
+  }
+  let forceScale = computeScale(width, height);
+
   const sim = d3.forceSimulation(nodes)
     .force("link", d3.forceLink(links).id(d => d.id)
-      .distance(l => {
-        if (l.type === "spouse" || l.type === "parent") return 55;
-        if (l.type === "close_companion") return 75;
-        if (l.type === "companion") return 95;
-        if (l.type === "opponent") return 130;
-        return 85;
-      })
+      .distance(l => baseLinkDistance(l.type) * forceScale)
       .strength(l => {
-        if (l.type === "spouse" || l.type === "parent") return 0.9;
-        if (l.type === "close_companion") return 0.6;
-        if (l.type === "opponent") return 0.25;
-        return 0.45;
+        if (l.type === "spouse" || l.type === "parent") return 0.7;
+        if (l.type === "close_companion") return 0.45;
+        if (l.type === "opponent") return 0.18;
+        return 0.3;
       })
     )
-    .force("charge", d3.forceManyBody().strength(d => d.id === "muhammad" ? -700 : -180))
+    .force("charge", d3.forceManyBody().strength(d => (d.id === "muhammad" ? -700 : -180) * forceScale))
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force("collide", d3.forceCollide().radius(d => d.radius + 14))
-    // Soft radial: keep the Prophet ﷺ near the center, others further out
-    .force("radial", d3.forceRadial(d => d.id === "muhammad" ? 0 : 230, width / 2, height / 2).strength(0.04));
+    .force("ellipse", ellipseForce(width / 2, height / 2, width * 0.44, height * 0.44, 0.18));
+
+  function reconfigureForces(w, h) {
+    forceScale = computeScale(w, h);
+    sim.force("center").x(w / 2).y(h / 2);
+    sim.force("ellipse", ellipseForce(w / 2, h / 2, w * 0.44, h * 0.44, 0.18));
+    sim.force("link").distance(l => baseLinkDistance(l.type) * forceScale);
+    sim.force("charge").strength(d => (d.id === "muhammad" ? -700 : -180) * forceScale);
+  }
 
   // Draw links
   const linkSel = linkLayer.selectAll("line")
@@ -138,18 +172,18 @@
       .on("drag",  dragged)
       .on("end",   dragEnded))
     .on("click",      (e, d) => { e.stopPropagation(); selectNode(d.id); })
-    .on("mouseenter", (e, d) => highlight(d.id))
-    .on("mouseleave", () => clearHighlight());
+    .on("mouseenter", (e, d) => { if (activeCats.size === 0) highlight(d.id); })
+    .on("mouseleave", () => { if (activeCats.size === 0) clearHighlight(); });
 
   nodeSel.append("circle")
     .attr("r", d => d.radius)
-    .attr("fill", d => CAT_COLOR[d.category] || "#666");
+    .attr("class", d => `node-circle cat-${d.category}`);
 
   // Inner glyph for the Prophet ﷺ node only
   nodeSel.filter(d => d.id === "muhammad")
     .append("circle")
     .attr("r", 6)
-    .attr("fill", "#f4ecdb")
+    .attr("class", "node-inner-glyph")
     .attr("pointer-events", "none");
 
   nodeSel.append("text")
@@ -209,8 +243,25 @@
       .classed("dim", l => l.source.id !== id && l.target.id !== id);
   }
   function clearHighlight() {
+    if (activeCats.size > 0) {
+      applyFilterClasses();
+      return;
+    }
     nodeSel.classed("lit", false).classed("dim", false);
     linkSel.classed("lit", false).classed("dim", false);
+  }
+
+  function applyFilterClasses() {
+    nodeSel
+      .classed("lit", n => activeCats.has(n.category) || n.id === "muhammad")
+      .classed("dim", n => !activeCats.has(n.category) && n.id !== "muhammad");
+    linkSel
+      .classed("lit", false)
+      .classed("dim", l => {
+        const okS = activeCats.has(l.source.category) || l.source.id === "muhammad";
+        const okT = activeCats.has(l.target.category) || l.target.id === "muhammad";
+        return !(okS && okT);
+      });
   }
 
   // ── Detail card ──────────────────────────────────────────
@@ -221,6 +272,11 @@
     const p = nodeById.get(id);
     if (!p) return;
     highlight(id);
+
+    // Fit zoom to the lit cluster (selected node + neighbours)
+    const litIds = new Set([id]);
+    (adjacency.get(id) || []).forEach(a => litIds.add(a.other));
+    focusOnNodes(nodes.filter(n => litIds.has(n.id)));
 
     const rels = (adjacency.get(id) || [])
       .map(r => ({ other: nodeById.get(r.other), type: r.type, dir: r.dir }))
@@ -317,17 +373,42 @@
     });
   });
   function applyCategoryFilter() {
-    if (activeCats.size === 0) { clearHighlight(); return; }
-    nodeSel
-      .classed("lit", n => activeCats.has(n.category) || n.id === "muhammad")
-      .classed("dim", n => !activeCats.has(n.category) && n.id !== "muhammad");
-    linkSel
-      .classed("lit", false)
-      .classed("dim", l => {
-        const okS = activeCats.has(l.source.category) || l.source.id === "muhammad";
-        const okT = activeCats.has(l.target.category) || l.target.id === "muhammad";
-        return !(okS && okT);
-      });
+    if (activeCats.size === 0) {
+      clearHighlight();
+      svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+      return;
+    }
+    applyFilterClasses();
+    const matches = nodes.filter(n => activeCats.has(n.category) || n.id === "muhammad");
+    focusOnNodes(matches);
+  }
+
+  function focusOnNodes(matches) {
+    if (!matches || matches.length === 0) return;
+    const { width: vw, height: vh } = svgEl.getBoundingClientRect();
+    // Wait briefly for simulation to settle nodes near the cluster, then fit.
+    // Using current positions; simulation alpha is low so positions are stable.
+    const pad = 70;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    matches.forEach(n => {
+      if (typeof n.x !== "number" || typeof n.y !== "number") return;
+      const r = n.radius || 8;
+      minX = Math.min(minX, n.x - r);
+      maxX = Math.max(maxX, n.x + r);
+      minY = Math.min(minY, n.y - r);
+      maxY = Math.max(maxY, n.y + r);
+    });
+    if (!isFinite(minX)) return;
+    const bw = (maxX - minX) + pad * 2;
+    const bh = (maxY - minY) + pad * 2;
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    // Fit bbox to viewport, but cap scale so we don't blow up a single tight cluster.
+    const scale = Math.min(vw / bw, vh / bh, 2.4);
+    const tx = vw / 2 - cx * scale;
+    const ty = vh / 2 - cy * scale;
+    const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+    svg.transition().duration(650).call(zoom.transform, t);
   }
 
   // Reset
@@ -342,10 +423,11 @@
 
   // Re-center on resize
   window.addEventListener("resize", () => {
-    const { width: w, height: h } = svgEl.getBoundingClientRect();
-    sim.force("center", d3.forceCenter(w / 2, h / 2));
-    sim.force("radial", d3.forceRadial(d => d.id === "muhammad" ? 0 : 230, w / 2, h / 2).strength(0.04));
-    sim.alpha(0.4).restart();
+    const r = svgEl.getBoundingClientRect();
+    width = r.width;
+    height = r.height;
+    reconfigureForces(width, height);
+    sim.alpha(0.5).restart();
   });
 
   // ── Timeline ─────────────────────────────────────────────
@@ -379,4 +461,66 @@
 
   // Auto-select the Prophet ﷺ on first load so the card isn't empty
   setTimeout(() => selectNode("muhammad"), 600);
+
+  // ── Theme switcher ───────────────────────────────────────
+  const THEMES = {
+    parchment:  "Parchment",
+    modern:     "Modern",
+    newspaper:  "Newspaper",
+    midnight:   "Midnight",
+    gold:       "Gold"
+  };
+  const themeBtn  = document.getElementById("theme-switcher-btn");
+  const themeMenu = document.getElementById("theme-switcher-menu");
+  const themeCur  = document.getElementById("theme-switcher-current");
+
+  function applyTheme(name) {
+    if (!THEMES[name]) name = "parchment";
+    document.documentElement.setAttribute("data-theme", name);
+    themeCur.textContent = THEMES[name];
+    themeMenu.querySelectorAll("li").forEach(li => {
+      li.setAttribute("aria-selected", li.dataset.select === name ? "true" : "false");
+    });
+    try { localStorage.setItem("sirah-theme", name); } catch (e) { /* ignore */ }
+  }
+
+  function openMenu() {
+    themeMenu.hidden = false;
+    themeBtn.setAttribute("aria-expanded", "true");
+  }
+  function closeMenu() {
+    themeMenu.hidden = true;
+    themeBtn.setAttribute("aria-expanded", "false");
+  }
+
+  // Initialize from the attribute already set by the inline head script
+  applyTheme(document.documentElement.getAttribute("data-theme") || "parchment");
+
+  themeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    themeMenu.hidden ? openMenu() : closeMenu();
+  });
+  themeMenu.addEventListener("click", (e) => {
+    const li = e.target.closest("li[data-select]");
+    if (!li) return;
+    applyTheme(li.dataset.select);
+    closeMenu();
+    themeBtn.focus();
+  });
+  themeMenu.addEventListener("keydown", (e) => {
+    const li = e.target.closest("li[data-select]");
+    if (!li) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      applyTheme(li.dataset.select);
+      closeMenu();
+      themeBtn.focus();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (!themeMenu.hidden && !e.target.closest("#theme-switcher")) closeMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !themeMenu.hidden) { closeMenu(); themeBtn.focus(); }
+  });
 })();
