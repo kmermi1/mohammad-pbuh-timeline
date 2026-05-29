@@ -250,11 +250,6 @@ header, section, footer, .divider { position: relative; z-index: 2; }
   margin-bottom: 56px;
 }
 .mast-side { flex: 0 0 auto; }
-.mast-right {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
 .mast-date { flex: 0 0 auto; }
 .mast-center {
   font-family: var(--display);
@@ -430,6 +425,12 @@ header, section, footer, .divider { position: relative; z-index: 2; }
 .reset-btn:hover {
   border-color: var(--burgundy);
   color: var(--burgundy);
+}
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
 }
 
 /* Graph stage */
@@ -705,7 +706,19 @@ header, section, footer, .divider { position: relative; z-index: 2; }
   background: var(--burgundy);
   border-radius: 50%;
 }
+.tl-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "title icon"
+    "age   icon"
+    "body  body";
+  column-gap: 22px;
+  row-gap: 0;
+  align-items: start;
+}
 .tl-body h3 {
+  grid-area: title;
   font-family: var(--display);
   font-weight: 500;
   font-size: 1.6rem;
@@ -713,6 +726,7 @@ header, section, footer, .divider { position: relative; z-index: 2; }
   line-height: 1.15;
 }
 .tl-body .age {
+  grid-area: age;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.18em;
@@ -722,10 +736,36 @@ header, section, footer, .divider { position: relative; z-index: 2; }
   margin-bottom: 10px;
 }
 .tl-body p {
+  grid-area: body;
   margin: 0;
   font-size: 1rem;
   color: var(--ink-soft);
   max-width: 600px;
+}
+.tl-icon {
+  grid-area: icon;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  color: var(--gold-deep);
+  opacity: 0.85;
+  margin-top: 2px;
+  padding: 6px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--bg-highlight);
+  box-sizing: border-box;
+}
+.tl-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+[data-theme="modern"] .tl-icon,
+[data-theme="midnight"] .tl-icon,
+[data-theme="gold"] .tl-icon {
+  color: var(--gold);
+  opacity: 0.95;
 }
 
 /* ─────────── FOOTER ─────────── */
@@ -797,6 +837,8 @@ header, section, footer, .divider { position: relative; z-index: 2; }
   .tl-year strong { display: inline; font-size: 1.2rem; margin-right: 8px; }
   .tl-year .ce { display: inline; margin: 0; }
   .tl-marker { margin-top: 4px; }
+  .tl-body { column-gap: 14px; }
+  .tl-icon { width: 48px; height: 48px; padding: 4px; }
 }
 
 /* ─────────── THEME SWITCHER ─────────── */
